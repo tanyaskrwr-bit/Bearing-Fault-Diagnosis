@@ -8,6 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
 from scipy.io import loadmat
+from io import BytesIO
 from scipy.signal import spectrogram, find_peaks, butter, sosfiltfilt, hilbert
 from scipy.stats import kurtosis
 
@@ -18,6 +19,8 @@ COLORS = {'Normal':'#2878B5','Inner Race Fault':'#E6862E','Ball Fault':'#269B62'
 FILES = {
  '0 HP': {'Normal':('97.mat.txt','X097_DE_time'),'Inner Race Fault':('105.mat.txt','X105_DE_time'),'Ball Fault':('118.mat.txt','X118_DE_time'),'Outer Race Fault':('130.mat.txt','X130_DE_time')},
  '1 HP': {'Normal':('98.mat.txt','X098_DE_time'),'Inner Race Fault':('106.mat.txt','X106_DE_time'),'Ball Fault':('119.mat.txt','X119_DE_time'),'Outer Race Fault':('131.mat.txt','X131_DE_time')},
+ '2 HP': {'Normal':('99.mat.txt','X099_DE_time'),'Inner Race Fault':('107.mat.txt','X107_DE_time')},
+ '3 HP': {'Normal':('100.mat.txt','X100_DE_time'),'Inner Race Fault':('108.mat.txt','X108_DE_time')},
 }
 st.set_page_config(page_title='Bearing Fault Diagnosis | Engineering Dashboard',page_icon='⚙️',layout='wide')
 st.markdown('''<style>
@@ -52,7 +55,7 @@ def features(x):
             'Mean':float(np.mean(x)),'Std':float(np.std(x)),'Variance':float(np.var(x)),'Peak':peak}
 
 def feature_frame(load, signals):
-    return pd.DataFrame([{'Load':load,'Condition':n,**features(signals[n])} for n in NAMES if n in signals])
+    return pd.DataFrame([{'Load':load,'Condition':n,**features(signals[n])} for n in signals])
 
 def fft(x,limit=3000):
     n=len(x); freq=np.fft.rfftfreq(n,1/FS)
@@ -68,7 +71,7 @@ def peak_frame(f,a,n=10):
     return pd.DataFrame({'Rank':np.arange(1,len(ids)+1),'Frequency (Hz)':np.round(f[ids],3),'Amplitude':np.round(a[ids],6)})
 
 def envelope(x,limit):
-    sos=butter(4,[1000,5000],btype='bandpass',fs=FS,output='sos')
+    sos=butter(4,[max(100,FS*0.08),min(5000,FS*0.42)],btype='bandpass',fs=FS,output='sos')
     env=np.abs(hilbert(sosfiltfilt(sos,x)))
     return fft(env,limit)
 
@@ -80,13 +83,60 @@ def download(df,label,filename):
 
 st.markdown('<div class="hero"><h1>⚙️ Bearing Fault Diagnosis</h1><p>Industrial Machine Health Monitoring • CWRU Vibration Analytics • Engineering Dashboard</p></div>',unsafe_allow_html=True)
 st.sidebar.header('Dashboard Controls')
-modules=['Overview & Summary','Time-Domain Analysis','FFT Spectrum','Time-Frequency Spectrogram','Dominant Peaks','Feature Comparison','Envelope Spectrum','0 HP vs 1 HP Comparison']
+modules=['Overview & Summary','Time-Domain Analysis','FFT Spectrum','Time-Frequency Spectrogram','Dominant Peaks','Feature Comparison','Envelope Spectrum','Load Comparison']
+source=st.sidebar.radio('Data source',['Built-in CWRU dataset','Upload your own data'])
 module=st.sidebar.selectbox('Analysis module',modules)
-load=st.sidebar.radio('Motor load',['0 HP','1 HP'],horizontal=True) if module!='0 HP vs 1 HP Comparison' else 'Both'
-st.sidebar.caption('Sampling frequency: 12,000 Hz | Drive-end signals')
-st.sidebar.info('2 HP and 3 HP will be added after verifying all required dataset files.')
+is_upload=source=='Upload your own data'
+if is_upload and module=='Load Comparison':
+    st.sidebar.warning('Load comparison is for built-in CWRU data. Select another analysis.')
+    st.stop()
+load=st.sidebar.selectbox('Motor load',['0 HP','1 HP','2 HP','3 HP']) if not is_upload and module!='Load Comparison' else ('Uploaded data' if is_upload else 'All loads')
+if is_upload:
+    st.sidebar.caption('Upload CSV, TXT or MATLAB .mat (up to 50 MB).')
+    upload=st.file_uploader('Upload a vibration signal',type=['csv','txt','mat'],max_upload_size=50)
+    if upload is None:
+        st.info('Upload a CSV, TXT, or MATLAB .mat vibration recording to begin. Files are processed in this session, not added to GitHub.')
+        st.stop()
+    try:
+        raw=upload.getvalue()
+        if upload.name.lower().endswith('.mat'):
+            mat=loadmat(BytesIO(raw))
+            options={k:np.asarray(v) for k,v in mat.items()
+                     if not k.startswith('__') and np.issubdtype(np.asarray(v).dtype,np.number)
+                     and np.asarray(v).size>=100 and np.asarray(v).ndim<=2
+                     and 1 in np.asarray(v).shape}
+            if not options: raise ValueError('No numeric vibration vector found in MAT file.')
+            column=st.selectbox('MATLAB signal variable',list(options))
+            x=np.asarray(options[column],dtype=float).reshape(-1)
+        else:
+            if upload.name.lower().endswith('.csv'):
+                tab=pd.read_csv(BytesIO(raw),sep=None,engine='python')
+            else:
+                try: tab=pd.read_csv(BytesIO(raw),sep=None,engine='python',header=None,comment='#')
+                except Exception: tab=pd.read_csv(BytesIO(raw),sep=r'\\s+',engine='python',header=None,comment='#')
+            valid={}
+            for c in tab.columns:
+                vals=pd.to_numeric(tab[c],errors='coerce')
+                if vals.notna().sum()>=100: valid[str(c)]=vals.dropna().to_numpy(dtype=float)
+            if not valid: raise ValueError('No numeric column with at least 100 samples found.')
+            column=st.selectbox('Vibration amplitude column',list(valid))
+            x=valid[column]
+        if len(x)<100 or len(x)>3_000_000 or not np.all(np.isfinite(x)):
+            raise ValueError('Signal must contain 100–3,000,000 finite numeric samples.')
+    except Exception as exc:
+        st.error(f'Could not read uploaded signal: {exc}')
+        st.stop()
+    FS=st.number_input('Sampling frequency of uploaded signal (Hz)',min_value=1000,max_value=100000,value=12000,step=1000,
+                       help='Enter the actual sample rate from the measurement equipment; do not assume 12 kHz.')
+    label=st.text_input('Signal label',value='Uploaded signal',max_chars=80)
+    signals={label:x}
+    errors=[]
+    st.info('Exploratory signal analysis only. Uploaded recordings are not automatically classified as Normal or Faulty.')
+else:
+    st.sidebar.caption('Built-in CWRU drive-end signals | 12,000 Hz')
+    st.sidebar.info('2 HP / 3 HP show available Normal and Inner Race data. Ball and Outer Race require additional files.')
 
-if module=='0 HP vs 1 HP Comparison':
+if module=='Load Comparison':
     frames=[]; problems=[]
     for load_name in FILES:
         sig,err=get_load(load_name);problems+=err
@@ -97,17 +147,17 @@ if module=='0 HP vs 1 HP Comparison':
     if not frames: st.error('No data available. Check the data folder.');st.stop()
     df=pd.concat(frames,ignore_index=True)
     a,b,c=st.columns(3)
-    a.metric('Motor loads',f'{df.Load.nunique()} / 2');b.metric('Loaded recordings',len(df));c.metric('Sampling frequency','12 kHz')
-    st.subheader('0 HP vs 1 HP • Feature Comparison')
+    a.metric('Motor loads',f'{df.Load.nunique()} / 4');b.metric('Loaded recordings',len(df));c.metric('Sampling frequency',f'{FS:,} Hz')
+    st.subheader('0–3 HP • Available Feature Comparison')
     metric=st.selectbox('Feature',['RMS','Kurtosis','Crest Factor','Peak-to-Peak','Std','Variance','Peak','Mean'])
     pivot=df.pivot(index='Condition',columns='Load',values=metric).reindex(NAMES)
     st.bar_chart(pivot)
     st.dataframe(df,use_container_width=True,hide_index=True)
-    download(df,'⬇ Export both loads (CSV)','bearing_comparison_0HP_1HP.csv')
+    download(df,'⬇ Export both loads (CSV)','bearing_comparison_all_loads.csv')
     st.caption('Feature values use the full recording for each condition. Differences may reflect operating load as well as fault condition.')
     st.stop()
 
-signals,errors=get_load(load)
+signals,errors=(signals,errors) if is_upload else get_load(load)
 if errors:
     with st.expander('Data loading notices',expanded=not bool(signals)):
         for err in errors: st.warning(err)
@@ -117,16 +167,16 @@ if not signals:
 df=feature_frame(load,signals)
 maxrow=df.loc[df['RMS'].idxmax()]
 a,b,c,d=st.columns(4)
-a.metric('Selected load',load);b.metric('Signals loaded',f'{len(signals)} / 4');c.metric('Highest RMS condition',maxrow['Condition']);d.metric('Sampling frequency','12 kHz')
+a.metric('Selected load',load);b.metric('Signals loaded',f'{len(signals)} / {1 if is_upload else 4}');c.metric('Highest RMS condition',maxrow['Condition']);d.metric('Sampling frequency',f'{FS:,} Hz')
 st.caption('RMS, kurtosis and other features are calculated on each full vibration recording.')
 st.divider()
 
 if module=='Overview & Summary':
     st.subheader('System Overview')
-    st.write('Explore vibration signatures for four bearing conditions using six signal-analysis modules. The dashboard displays known labelled CWRU recordings; it does not yet automatically classify unseen vibration signals.')
+    st.write('Explore vibration signatures with six signal-analysis modules. Built-in CWRU recordings have known labels; uploaded signals are unlabelled and are not automatically classified.')
     st.dataframe(df,use_container_width=True,hide_index=True)
     download(df,'⬇ Export feature summary (CSV)',f'feature_summary_{load.replace(" ","")}.csv')
-    st.markdown('**Workflow:** Dataset → Signal loading → Signal processing → Feature extraction → Visual interpretation → Future ML-based diagnosis')
+    st.markdown('**Workflow:** Dataset / Upload → Signal loading → Signal processing → Feature extraction → Visual interpretation → Future validated diagnosis')
 else:
     if module=='Feature Comparison':
         st.subheader('Feature Comparison')
@@ -136,13 +186,13 @@ else:
             for metric in chosen:
                 fig,ax=plt.subplots(figsize=(10,2.7))
                 names=df['Condition'].tolist();values=df[metric].to_numpy()
-                ax.bar(names,values,color=[COLORS[n] for n in names]);ax.set_ylabel(metric);style_ax(ax)
+                ax.bar(names,values,color=[COLORS.get(n,'#2878B5') for n in names]);ax.set_ylabel(metric);style_ax(ax)
                 ax.tick_params(axis='x',labelrotation=12);fig.tight_layout();st.pyplot(fig);plt.close(fig)
         st.dataframe(df,use_container_width=True,hide_index=True)
         download(df,'⬇ Export features (CSV)',f'features_{load.replace(" ","")}.csv')
     else:
-        name=st.selectbox('Bearing condition',[n for n in NAMES if n in signals]);x=signals[name]
-        color=COLORS[name]
+        name=st.selectbox('Bearing condition',[n for n in signals]);x=signals[name]
+        color=COLORS.get(name,'#2878B5')
         if module=='Time-Domain Analysis':
             st.subheader('Time-Domain Analysis')
             maxdur=min(1.,len(x)/FS)
@@ -153,7 +203,7 @@ else:
             fig.tight_layout();st.pyplot(fig);plt.close(fig)
         elif module=='FFT Spectrum':
             st.subheader('FFT Spectrum')
-            limit=st.slider('Maximum frequency (Hz)',500,6000,3000,250)
+            limit=st.slider('Maximum frequency (Hz)',min(500,FS//2),max(500,FS//2),min(3000,FS//2),250)
             f,amp=fft(x,limit);fig,ax=plt.subplots(figsize=(12,4))
             ax.plot(f,amp,color=color,lw=.8);ax.set(xlabel='Frequency (Hz)',ylabel='Amplitude',title=f'FFT | {name} | {load}')
             style_ax(ax);fig.tight_layout();st.pyplot(fig);plt.close(fig)
@@ -162,14 +212,14 @@ else:
         elif module=='Time-Frequency Spectrogram':
             st.subheader('Time-Frequency Spectrogram')
             f,t,p=spectrogram(x,fs=FS,nperseg=512,noverlap=448)
-            sel=f<=3000;fig,ax=plt.subplots(figsize=(12,4.5))
+            sel=f<=min(3000,FS/2);fig,ax=plt.subplots(figsize=(12,4.5))
             m=ax.pcolormesh(t,f[sel],10*np.log10(p[sel]+1e-15),cmap='viridis',shading='auto')
             fig.colorbar(m,ax=ax,label='Power spectral density (dB/Hz)')
             ax.set(xlabel='Time (s)',ylabel='Frequency (Hz)',title=f'Spectrogram | {name} | {load}')
             fig.tight_layout();st.pyplot(fig);plt.close(fig)
         elif module=='Dominant Peaks':
             st.subheader('Dominant FFT Peaks')
-            limit=st.slider('Maximum frequency (Hz)',500,6000,3000,250)
+            limit=st.slider('Maximum frequency (Hz)',min(500,FS//2),max(500,FS//2),min(3000,FS//2),250)
             f,amp=fft(x,limit);peaks=peak_frame(f,amp,12)
             fig,ax=plt.subplots(figsize=(12,4));ax.plot(f,amp,color=color,lw=.7)
             if not peaks.empty: ax.scatter(peaks['Frequency (Hz)'],peaks['Amplitude'],color='#102b49',s=20,zorder=4)
@@ -179,7 +229,7 @@ else:
             download(peaks,'⬇ Export dominant peaks (CSV)','dominant_peaks.csv')
         elif module=='Envelope Spectrum':
             st.subheader('Envelope Spectrum')
-            limit=st.slider('Maximum envelope frequency (Hz)',100,1000,300,50)
+            limit=st.slider('Maximum envelope frequency (Hz)',100,min(1000,FS//2),min(300,FS//2),50)
             try:
                 f,amp=envelope(x,limit)
                 fig,ax=plt.subplots(figsize=(12,4));ax.plot(f,amp,color=color,lw=.8)
@@ -192,4 +242,4 @@ else:
             except Exception as e: st.error(f'Envelope processing error: {e}')
 
 st.divider()
-st.caption('CWRU bearing vibration dataset • 12 kHz drive-end signals • This dashboard supports exploratory signal analysis, not validated automatic fault classification.')
+st.caption('Built-in CWRU dataset or user-uploaded vibration data • Exploratory signal analysis only; not validated automatic fault classification.')

@@ -69,6 +69,25 @@ div[data-baseweb="select"]>div,div[data-baseweb="input"]>div,div[data-baseweb="t
 .stTabs [data-baseweb="tab-list"]{gap:8px}
 .stTabs [data-baseweb="tab"]{background:#0e1d30;border-radius:9px 9px 0 0;padding:9px 15px}
 .stTabs [aria-selected="true"]{border-bottom:2px solid #25c7f4;color:#61ddff}
+.dark-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #0c1929;
+    color: #e7f0ff;
+}
+.dark-table th {
+    background-color: #132940;
+    color: #cfe6ff;
+    padding: 10px;
+    border: 1px solid #29435c;
+    text-align: left;
+}
+.dark-table td {
+    background-color: #0c1929;
+    color: #e7f0ff;
+    padding: 9px;
+    border: 1px solid #29435c;
+}
 </style>''',unsafe_allow_html=True)
 
 @st.cache_data(show_spinner=False)
@@ -198,7 +217,10 @@ if module=='Load Comparison':
     metric=st.selectbox('Feature',['RMS','Kurtosis','Crest Factor','Peak-to-Peak','Std','Variance','Peak','Mean'])
     pivot=df.pivot(index='Condition',columns='Load',values=metric).reindex(NAMES)
     st.bar_chart(pivot)
-    st.dataframe(df,use_container_width=True,hide_index=True,theme="dark")
+   st.markdown(
+    df.to_html(index=False, classes="dark-table", border=0),
+    unsafe_allow_html=True
+)
     download(df,'⬇ Export both loads (CSV)','bearing_comparison_all_loads.csv')
     st.caption('Feature values use the full recording for each condition. Differences may reflect operating load as well as fault condition.')
     st.stop()

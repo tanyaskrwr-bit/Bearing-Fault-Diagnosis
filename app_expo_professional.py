@@ -377,7 +377,7 @@ else:
                 ax.set(xlabel='Envelope frequency (Hz)',ylabel='Envelope amplitude',title=f'Envelope spectrum | {name} | {load}')
                 style_ax(ax);fig.tight_layout();st.pyplot(fig);plt.close(fig)
                 peaks=peak_frame(f,amp,10)
-                st.dataframe(peaks,use_container_width=True,hide_index=True,theme="dark")
+                st.dataframe(peaks,use_container_width=True,hide_index=True)
                 download(peaks,'⬇ Export envelope peaks (CSV)','envelope_peaks.csv')
                 st.info('Envelope spectral peaks are diagnostic indicators, not automatic proof of a specific fault.')
             except Exception as e: st.error(f'Envelope processing error: {e}')

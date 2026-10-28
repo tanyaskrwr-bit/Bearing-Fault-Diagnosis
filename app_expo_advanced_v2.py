@@ -23,72 +23,57 @@ FILES = {
  '2 HP': {'Normal':('99.mat.txt','X099_DE_time'),'Inner Race Fault':('107.mat.txt','X107_DE_time')},
  '3 HP': {'Normal':('100.mat.txt','X100_DE_time'),'Inner Race Fault':('108.mat.txt','X108_DE_time')},
 }
-st.set_page_config(page_title='Bearing Fault Diagnosis | AI Health Console',page_icon='⚙️',layout='wide')
+st.set_page_config(page_title='BearingIQ | Predictive Maintenance Lab',page_icon='🛠️',layout='wide')
 st.markdown('''<style>
 :root{color-scheme:dark}
-.stApp{background:radial-gradient(ellipse at top right,#102743 0%,#07111f 48%,#050b14 100%);color:#e7f0ff}
-.block-container{padding:1.5rem clamp(1rem,2.2vw,2.5rem) 2.5rem;max-width:none;width:100%}
-[data-testid="stHeader"]{background:rgba(5,11,20,.78)}
-[data-testid="stSidebar"]{background:linear-gradient(180deg,#0b1627,#070e19);border-right:1px solid #1c3551}
-[data-testid="stSidebar"] *{color:#dbeafe}
-/* Keep every form control readable on the dark background */
-div[data-baseweb="select"] > div{background:#0d1b2c !important;border:1px solid #365675 !important;color:#eaf4ff !important}
-div[data-baseweb="select"] span,div[data-baseweb="select"] input{color:#eaf4ff !important;-webkit-text-fill-color:#eaf4ff !important}
-div[data-baseweb="select"] svg{fill:#b8d8f2 !important}
-ul[role="listbox"],div[role="listbox"],li[role="option"]{background:#102238 !important;color:#eaf4ff !important}
-li[role="option"]:hover{background:#164267 !important}
-[data-testid="stMetric"]{background:linear-gradient(145deg,#12243a,#0d1a2b);padding:17px 18px;border:1px solid #24425f;border-radius:15px;box-shadow:0 8px 24px #00000022}
-[data-testid="stMetricLabel"]{color:#9bb4d0}
+.stApp{background:radial-gradient(ellipse at 80% 0%,#102743 0%,#07111f 48%,#050b14 100%);color:#edfdfb}
+.block-container{padding:1.3rem clamp(1rem,2.4vw,2.7rem) 3rem;max-width:1600px}
+[data-testid="stHeader"]{background:rgba(5,13,20,.86)}
+[data-testid="stSidebar"]{background:linear-gradient(180deg,#0b2028,#08131a);border-right:1px solid #1c3551}
+[data-testid="stSidebar"] *{color:#d9f7f2}
+div[data-baseweb="select"]>div,div[data-baseweb="input"]>div,div[data-baseweb="textarea"]>div{background:#0d1b2c!important;border:1px solid #365675!important;color:#f0fffd!important;border-radius:10px}
+div[data-baseweb="select"] span,div[data-baseweb="select"] input{color:#f0fffd!important;-webkit-text-fill-color:#f0fffd!important}
+div[data-baseweb="select"] svg{fill:#72e6d6!important}
+ul[role="listbox"],div[role="listbox"],li[role="option"]{background:#102238!important;color:#eaf4ff!important}
+li[role="option"]:hover{background:#164267!important}
+[data-testid="stMetric"]{background:linear-gradient(145deg,#12243a,#0d1a2b);padding:18px 19px;border:1px solid #24425f;border-radius:15px;box-shadow:0 8px 24px #00000022;min-height:112px}
+[data-testid="stMetricLabel"]{color:#9bb4d0;font-size:.92rem}
 [data-testid="stMetricValue"]{color:#eaf6ff;font-size:clamp(1.25rem,2vw,2rem);white-space:normal;overflow-wrap:anywhere;line-height:1.2}
-[data-testid="stMetricValue"] > div{white-space:normal;overflow-wrap:anywhere}
-[data-testid="stMetricLabel"]{font-size:clamp(.85rem,1.1vw,1rem);white-space:normal}
-[data-testid="stSidebar"]{min-width:220px}
+[data-testid="stMetricValue"]>div{white-space:normal;overflow-wrap:anywhere}
 [data-testid="stMetricDelta"]{color:#39d9ff}
-.hero{background:linear-gradient(115deg,#0c1b2d 0%,#123456 58%,#07566a 100%);border:1px solid #2b6b91;color:#fff;padding:25px 28px;border-radius:18px;margin-bottom:20px;box-shadow:0 12px 32px #00000035;position:relative;overflow:hidden}
-.hero:after{content:"";position:absolute;right:-55px;top:-95px;width:240px;height:240px;border:1px solid #53d9ff55;border-radius:50%;box-shadow:0 0 0 24px #53d9ff0b,0 0 0 48px #53d9ff08}
-.hero h1{color:#fff;margin:0;font-size:2rem;letter-spacing:-.03em}.hero p{color:#b8d8f2;margin:7px 0 0;font-size:.98rem}
-h1,h2,h3{letter-spacing:-.025em;color:#eaf4ff}
+.hero{background:linear-gradient(115deg,#0c1b2d 0%,#123456 58%,#07566a 100%);border:1px solid #2b6b91;color:#fff;padding:30px 32px;border-radius:22px;margin-bottom:18px;box-shadow:0 18px 45px #0005;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-45px;top:-125px;width:290px;height:290px;border:1px solid #53d9ff55;border-radius:50%;box-shadow:0 0 0 24px #53d9ff0b,0 0 0 48px #53d9ff08}
+.hero h1{color:#fff;margin:0;font-size:clamp(1.7rem,3vw,2.5rem);letter-spacing:-.04em;font-weight:800}
+.hero p{color:#b8d8f2;margin:9px 0 0;font-size:.98rem;letter-spacing:.06em}
+.hero-tag{display:inline-block;background:#53d9ff12;border:1px solid #53d9ff55;color:#b8d8f2;padding:5px 10px;border-radius:6px;font-size:.72rem;letter-spacing:.12em;margin-bottom:13px;font-weight:700}
+.hero-layout{display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative;z-index:1}
+.hero-copy{min-width:0}
+.hero-side{display:grid;grid-template-columns:1fr;gap:8px;min-width:190px}
+.hero-chip{border:1px solid #53d9ff3b;background:#07111f66;padding:9px 12px;border-radius:9px;font-size:.78rem;color:#cfe6ff;letter-spacing:.03em}
+.hero-chip b{display:block;font-size:.95rem;color:#fff;margin-top:2px}
+.section-intro{border-left:3px solid #25c7f4;padding:4px 0 4px 13px;margin:8px 0 16px}
+[data-testid=stVerticalBlockBorderWrapper]{border-color:#294966!important;border-radius:14px!important}
+@media(max-width:800px){.hero-layout{display:block}.hero-side{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:18px}.hero{padding:22px}}
+h1,h2,h3{letter-spacing:-.03em;color:#eaf4ff}
+h2{padding-top:4px}
 .stMarkdown,.stText,.stCaption{color:#c5d5e8}
 hr{border-color:#20354d}
-div[data-baseweb="select"]>div,div[data-baseweb="input"]>div,div[data-baseweb="textarea"]>div{background:#0d1b2c;border-color:#29435f;color:#e7f0ff;border-radius:10px}
-.stButton>button,.stDownloadButton>button{background:linear-gradient(100deg,#087ca8,#0b9ac1);color:#fff;border:1px solid #31c5ed;border-radius:10px;font-weight:600;transition:all .15s ease}
+.stButton>button,.stDownloadButton>button{background:linear-gradient(100deg,#087ca8,#0b9ac1);color:#fff;border:1px solid #31c5ed;border-radius:11px;font-weight:700;transition:all .15s ease}
 .stButton>button:hover,.stDownloadButton>button:hover{background:#0ca6cf;color:#fff;border-color:#7be7ff;box-shadow:0 0 18px #00bfff30}
 [data-testid="stDataFrame"],[data-testid="stTable"]{border:1px solid #294966;border-radius:12px;overflow:hidden;background:#0c1929}
-[data-testid="stDataFrame"]{color-scheme:dark !important}
-[data-testid="stDataFrame"] [role="grid"]{background:#0c1929 !important}
+[data-testid="stDataFrame"]{color-scheme:dark!important}
+[data-testid="stDataFrame"] [role="grid"]{background:#0c1929!important}
 [data-testid="stDataFrame"] canvas{color-scheme:dark}
-[data-testid="stTable"]{background:#0c1929 !important;color:#eaf4ff !important}
-[data-testid="stTable"] table{width:100% !important;border-collapse:collapse !important;background:#0c1929 !important;color:#eaf4ff !important}
-[data-testid="stTable"] th{background:#132940 !important;color:#cfe6ff !important;border:1px solid #294966 !important;padding:10px !important}
-[data-testid="stTable"] td{background:#0c1929 !important;color:#eaf4ff !important;border:1px solid #294966 !important;padding:10px !important}
-[data-testid="stDataFrame"] [data-testid="glideDataEditor"]{color-scheme:dark !important}
-[data-testid="stTable"] table{background:#0c1929 !important;color:#e7f0ff !important}
-[data-testid="stTable"] th{background:#132940 !important;color:#cfe6ff !important}
-[data-testid="stTable"] td{background:#0c1929 !important;color:#e7f0ff !important}
-[data-testid="stAlert"] p{color:inherit}
-[data-testid="stAlert"]{border-radius:12px}
+[data-testid="stTable"] table{width:100%!important;border-collapse:collapse!important;background:#0c1929!important;color:#eaf4ff!important}
+[data-testid="stTable"] th{background:#132940!important;color:#cfe6ff!important;border:1px solid #294966!important;padding:10px!important}
+[data-testid="stTable"] td{background:#0c1929!important;color:#eaf4ff!important;border:1px solid #29435c!important;padding:9px!important}
+[data-testid="stAlert"]{border-radius:13px}
 .stTabs [data-baseweb="tab-list"]{gap:8px}
-.stTabs [data-baseweb="tab"]{background:#0e1d30;border-radius:9px 9px 0 0;padding:9px 15px}
+.stTabs [data-baseweb="tab"]{background:#0e1d30;border-radius:9px 9px 0 0;padding:10px 15px}
 .stTabs [aria-selected="true"]{border-bottom:2px solid #25c7f4;color:#61ddff}
-.dark-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #0c1929;
-    color: #e7f0ff;
-}
-.dark-table th {
-    background-color: #132940;
-    color: #cfe6ff;
-    padding: 10px;
-    border: 1px solid #29435c;
-    text-align: left;
-}
-.dark-table td {
-    background-color: #0c1929;
-    color: #e7f0ff;
-    padding: 9px;
-    border: 1px solid #29435c;
-}
+.dark-table{width:100%;border-collapse:collapse;background:#0c1929;color:#e7f0ff}
+.dark-table th{background:#132940;color:#cfe6ff;padding:10px;border:1px solid #29435c;text-align:left}
+.dark-table td{background:#0c1929;color:#e7f0ff;padding:9px;border:1px solid #29435c}
 </style>''',unsafe_allow_html=True)
 
 @st.cache_data(show_spinner=False)
@@ -147,9 +132,10 @@ def style_ax(ax):
 def download(df,label,filename):
     st.download_button(label,df.to_csv(index=False).encode('utf-8'),file_name=filename,mime='text/csv')
 
-st.markdown('<div class="hero"><h1>⚙️ AI-Powered Industrial Machine Health</h1><p>BEARING FAULT DIAGNOSIS • VIBRATION INTELLIGENCE • ENGINEERING CONSOLE</p></div>',unsafe_allow_html=True)
-st.caption('ADVANCED PRESENTATION VERSION • Separate from the original dashboard')
-st.sidebar.header('Dashboard Controls')
+st.markdown('''<div class="hero"><div class="hero-layout"><div class="hero-copy"><div class="hero-tag">BEARING FAULT DIAGNOSIS  /  CONDITION MONITORING</div><h1>⚙️ Industrial Bearing Health Console</h1><p>VIBRATION ANALYTICS&nbsp; • &nbsp;FAULT SIGNATURES&nbsp; • &nbsp;ENGINEERING INSIGHTS</p></div><div class="hero-side"><div class="hero-chip">ANALYSIS MODE<b>Signal diagnostics</b></div><div class="hero-chip">SAMPLING RATE<b>12,000 Hz</b></div></div></div></div>''',unsafe_allow_html=True)
+st.caption('ENGINEERING WORKSPACE  /  SIGNAL PROCESSING  /  RESEARCH DEMONSTRATION')
+st.sidebar.markdown('### 🧭 Dashboard navigation')
+st.sidebar.caption('Choose a dataset and analysis workflow') 
 modules=['AI Health Command Center','Overview & Summary','Time-Domain Analysis','FFT Spectrum','Time-Frequency Spectrogram','Dominant Peaks','Feature Comparison','Envelope Spectrum','Experimental Fault Pattern Match','Early Warning Indicators','Load Comparison']
 source=st.sidebar.radio('Data source',['Built-in CWRU dataset','Upload your own data'])
 module=st.sidebar.selectbox('Analysis module',modules)
@@ -315,8 +301,8 @@ elif module=='Early Warning Indicators':
     st.caption('The initial windows are an arbitrary reference, not a verified healthy baseline. True predictive maintenance needs repeated timestamped measurements and failure histories.')
 
 elif module=='AI Health Command Center':
-    st.subheader('Machine Health Command Center')
-    st.write('A presentation-focused overview of the selected vibration dataset and extracted condition features.')
+    st.subheader('Live Condition Overview')
+    st.markdown('<div class="section-intro"><b>Machine Health Command Center</b><br><span>At-a-glance condition overview, extracted vibration features and signal availability for the selected dataset.</span></div>',unsafe_allow_html=True)
     healthy = int((df['Condition'] == 'Normal').sum())
     fault_count = int(len(df) - healthy)
     top_rms = df.loc[df['RMS'].idxmax()]

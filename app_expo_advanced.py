@@ -1,6 +1,7 @@
-"""Bearing Fault Diagnosis — Expo dashboard. Keep original app untouched.
+"""Bearing Fault Diagnosis — Advanced Expo Dashboard (separate version).
+Original app_expo_professional.py remains unchanged.
 Install: pip install streamlit numpy pandas matplotlib scipy
-Run: python -m streamlit run app_expo_professional.py
+Run: python -m streamlit run app_expo_advanced.py
 """
 from pathlib import Path
 import numpy as np
@@ -22,13 +23,72 @@ FILES = {
  '2 HP': {'Normal':('99.mat.txt','X099_DE_time'),'Inner Race Fault':('107.mat.txt','X107_DE_time')},
  '3 HP': {'Normal':('100.mat.txt','X100_DE_time'),'Inner Race Fault':('108.mat.txt','X108_DE_time')},
 }
-st.set_page_config(page_title='Bearing Fault Diagnosis | Engineering Dashboard',page_icon='⚙️',layout='wide')
+st.set_page_config(page_title='Bearing Fault Diagnosis | AI Health Console',page_icon='⚙️',layout='wide')
 st.markdown('''<style>
-.stApp{background:#f4f7fb}.block-container{padding-top:1.5rem;max-width:1450px}
-[data-testid="stSidebar"]{background:#eaf0f7}
-[data-testid="stMetric"]{background:white;padding:15px;border:1px solid #dce5ef;border-radius:13px;box-shadow:0 3px 10px #1e3a5f0b}
-.hero{background:linear-gradient(115deg,#102b49,#246078);color:white;padding:24px 28px;border-radius:16px;margin-bottom:20px}
-.hero h1{color:white;margin:0;font-size:2rem}.hero p{color:#d9eaf4;margin:5px 0 0}
+:root{color-scheme:dark}
+.stApp{background:radial-gradient(ellipse at top right,#102743 0%,#07111f 48%,#050b14 100%);color:#e7f0ff}
+.block-container{padding:1.5rem clamp(1rem,2.2vw,2.5rem) 2.5rem;max-width:none;width:100%}
+[data-testid="stHeader"]{background:rgba(5,11,20,.78)}
+[data-testid="stSidebar"]{background:linear-gradient(180deg,#0b1627,#070e19);border-right:1px solid #1c3551}
+[data-testid="stSidebar"] *{color:#dbeafe}
+/* Keep every form control readable on the dark background */
+div[data-baseweb="select"] > div{background:#0d1b2c !important;border:1px solid #365675 !important;color:#eaf4ff !important}
+div[data-baseweb="select"] span,div[data-baseweb="select"] input{color:#eaf4ff !important;-webkit-text-fill-color:#eaf4ff !important}
+div[data-baseweb="select"] svg{fill:#b8d8f2 !important}
+ul[role="listbox"],div[role="listbox"],li[role="option"]{background:#102238 !important;color:#eaf4ff !important}
+li[role="option"]:hover{background:#164267 !important}
+[data-testid="stMetric"]{background:linear-gradient(145deg,#12243a,#0d1a2b);padding:17px 18px;border:1px solid #24425f;border-radius:15px;box-shadow:0 8px 24px #00000022}
+[data-testid="stMetricLabel"]{color:#9bb4d0}
+[data-testid="stMetricValue"]{color:#eaf6ff;font-size:clamp(1.25rem,2vw,2rem);white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+[data-testid="stMetricValue"] > div{white-space:normal;overflow-wrap:anywhere}
+[data-testid="stMetricLabel"]{font-size:clamp(.85rem,1.1vw,1rem);white-space:normal}
+[data-testid="stSidebar"]{min-width:220px}
+[data-testid="stMetricDelta"]{color:#39d9ff}
+.hero{background:linear-gradient(115deg,#0c1b2d 0%,#123456 58%,#07566a 100%);border:1px solid #2b6b91;color:#fff;padding:25px 28px;border-radius:18px;margin-bottom:20px;box-shadow:0 12px 32px #00000035;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-55px;top:-95px;width:240px;height:240px;border:1px solid #53d9ff55;border-radius:50%;box-shadow:0 0 0 24px #53d9ff0b,0 0 0 48px #53d9ff08}
+.hero h1{color:#fff;margin:0;font-size:2rem;letter-spacing:-.03em}.hero p{color:#b8d8f2;margin:7px 0 0;font-size:.98rem}
+h1,h2,h3{letter-spacing:-.025em;color:#eaf4ff}
+.stMarkdown,.stText,.stCaption{color:#c5d5e8}
+hr{border-color:#20354d}
+div[data-baseweb="select"]>div,div[data-baseweb="input"]>div,div[data-baseweb="textarea"]>div{background:#0d1b2c;border-color:#29435f;color:#e7f0ff;border-radius:10px}
+.stButton>button,.stDownloadButton>button{background:linear-gradient(100deg,#087ca8,#0b9ac1);color:#fff;border:1px solid #31c5ed;border-radius:10px;font-weight:600;transition:all .15s ease}
+.stButton>button:hover,.stDownloadButton>button:hover{background:#0ca6cf;color:#fff;border-color:#7be7ff;box-shadow:0 0 18px #00bfff30}
+[data-testid="stDataFrame"],[data-testid="stTable"]{border:1px solid #294966;border-radius:12px;overflow:hidden;background:#0c1929}
+[data-testid="stDataFrame"]{color-scheme:dark !important}
+[data-testid="stDataFrame"] [role="grid"]{background:#0c1929 !important}
+[data-testid="stDataFrame"] canvas{color-scheme:dark}
+[data-testid="stTable"]{background:#0c1929 !important;color:#eaf4ff !important}
+[data-testid="stTable"] table{width:100% !important;border-collapse:collapse !important;background:#0c1929 !important;color:#eaf4ff !important}
+[data-testid="stTable"] th{background:#132940 !important;color:#cfe6ff !important;border:1px solid #294966 !important;padding:10px !important}
+[data-testid="stTable"] td{background:#0c1929 !important;color:#eaf4ff !important;border:1px solid #294966 !important;padding:10px !important}
+[data-testid="stDataFrame"] [data-testid="glideDataEditor"]{color-scheme:dark !important}
+[data-testid="stTable"] table{background:#0c1929 !important;color:#e7f0ff !important}
+[data-testid="stTable"] th{background:#132940 !important;color:#cfe6ff !important}
+[data-testid="stTable"] td{background:#0c1929 !important;color:#e7f0ff !important}
+[data-testid="stAlert"] p{color:inherit}
+[data-testid="stAlert"]{border-radius:12px}
+.stTabs [data-baseweb="tab-list"]{gap:8px}
+.stTabs [data-baseweb="tab"]{background:#0e1d30;border-radius:9px 9px 0 0;padding:9px 15px}
+.stTabs [aria-selected="true"]{border-bottom:2px solid #25c7f4;color:#61ddff}
+.dark-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #0c1929;
+    color: #e7f0ff;
+}
+.dark-table th {
+    background-color: #132940;
+    color: #cfe6ff;
+    padding: 10px;
+    border: 1px solid #29435c;
+    text-align: left;
+}
+.dark-table td {
+    background-color: #0c1929;
+    color: #e7f0ff;
+    padding: 9px;
+    border: 1px solid #29435c;
+}
 </style>''',unsafe_allow_html=True)
 
 @st.cache_data(show_spinner=False)
@@ -76,14 +136,21 @@ def envelope(x,limit):
     return fft(env,limit)
 
 def style_ax(ax):
-    ax.grid(alpha=.2);ax.spines[['top','right']].set_visible(False)
+    ax.set_facecolor('#0c1929')
+    ax.figure.set_facecolor('#0c1929')
+    ax.grid(alpha=.18,color='#7f9db9',linestyle='--')
+    ax.tick_params(colors='#b9cde2')
+    ax.xaxis.label.set_color('#c9d9eb'); ax.yaxis.label.set_color('#c9d9eb')
+    ax.title.set_color('#eaf4ff')
+    for spine in ax.spines.values(): spine.set_color('#29445e')
 
 def download(df,label,filename):
     st.download_button(label,df.to_csv(index=False).encode('utf-8'),file_name=filename,mime='text/csv')
 
-st.markdown('<div class="hero"><h1>⚙️ Bearing Fault Diagnosis</h1><p>Industrial Machine Health Monitoring • CWRU Vibration Analytics • Engineering Dashboard</p></div>',unsafe_allow_html=True)
+st.markdown('<div class="hero"><h1>⚙️ AI-Powered Industrial Machine Health</h1><p>BEARING FAULT DIAGNOSIS • VIBRATION INTELLIGENCE • ENGINEERING CONSOLE</p></div>',unsafe_allow_html=True)
+st.caption('ADVANCED PRESENTATION VERSION • Separate from the original dashboard')
 st.sidebar.header('Dashboard Controls')
-modules=['Overview & Summary','Time-Domain Analysis','FFT Spectrum','Time-Frequency Spectrogram','Dominant Peaks','Feature Comparison','Envelope Spectrum','Experimental Fault Pattern Match','Early Warning Indicators','Load Comparison']
+modules=['AI Health Command Center','Overview & Summary','Time-Domain Analysis','FFT Spectrum','Time-Frequency Spectrogram','Dominant Peaks','Feature Comparison','Envelope Spectrum','Experimental Fault Pattern Match','Early Warning Indicators','Load Comparison']
 source=st.sidebar.radio('Data source',['Built-in CWRU dataset','Upload your own data'])
 module=st.sidebar.selectbox('Analysis module',modules)
 is_upload=source=='Upload your own data'
@@ -152,8 +219,13 @@ if module=='Load Comparison':
     metric=st.selectbox('Feature',['RMS','Kurtosis','Crest Factor','Peak-to-Peak','Std','Variance','Peak','Mean'])
     pivot=df.pivot(index='Condition',columns='Load',values=metric).reindex(NAMES)
     st.bar_chart(pivot)
-    st.dataframe(df,use_container_width=True,hide_index=True)
-    download(df,'⬇ Export both loads (CSV)','bearing_comparison_all_loads.csv')
+
+    st.markdown(
+        df.to_html(index=False, classes="dark-table", border=0),
+        unsafe_allow_html=True
+    )
+
+    download(df, '⬇ Export both loads (CSV)', 'bearing_comparison_all_loads.csv')
     st.caption('Feature values use the full recording for each condition. Differences may reflect operating load as well as fault condition.')
     st.stop()
 
@@ -242,10 +314,38 @@ elif module=='Early Warning Indicators':
     download(trend,'⬇ Export trend indicators','vibration_early_warning_indicators.csv')
     st.caption('The initial windows are an arbitrary reference, not a verified healthy baseline. True predictive maintenance needs repeated timestamped measurements and failure histories.')
 
+elif module=='AI Health Command Center':
+    st.subheader('Machine Health Command Center')
+    st.write('A presentation-focused overview of the selected vibration dataset and extracted condition features.')
+    healthy = int((df['Condition'] == 'Normal').sum())
+    fault_count = int(len(df) - healthy)
+    top_rms = df.loc[df['RMS'].idxmax()]
+    k1,k2,k3,k4 = st.columns(4)
+    k1.metric('Recording set', load)
+    k2.metric('Signals available', len(signals))
+    k3.metric('Conditions shown', len(df))
+    k4.metric('Highest RMS condition', str(top_rms['Condition']))
+    st.divider()
+    left,right = st.columns([1.25,1])
+    with left:
+        st.markdown('#### Vibration feature profile')
+        feature_choice = st.selectbox('Feature to compare', ['RMS','Kurtosis','Crest Factor','Peak-to-Peak','Std','Variance','Peak','Mean'], key='command_feature')
+        fig,ax = plt.subplots(figsize=(8,3.5))
+        ax.bar(df['Condition'], df[feature_choice], color=[COLORS.get(v,'#2878B5') for v in df['Condition']])
+        ax.set_ylabel(feature_choice); ax.tick_params(axis='x', labelrotation=18); style_ax(ax)
+        fig.tight_layout(); st.pyplot(fig); plt.close(fig)
+    with right:
+        st.markdown('#### Condition snapshot')
+        st.dataframe(df[['Condition','RMS','Kurtosis','Crest Factor']].round(4), use_container_width=True, hide_index=True)
+        st.markdown('#### Interpretation guide')
+        st.info('RMS reflects overall vibration energy. Kurtosis can highlight impulsive behaviour. Crest factor compares peak amplitude with RMS. Interpret features together; none alone confirms a fault.')
+    st.markdown('#### Analysis workflow')
+    st.markdown('**Data source → Signal validation → Signal processing → Feature extraction → Engineering interpretation → Independently validated model (future work)**')
+    st.warning('This dashboard is a research/demo tool. It does not contain a validated AI classifier and does not predict remaining useful life.')
 elif module=='Overview & Summary':
     st.subheader('System Overview')
-    st.write('Explore vibration signatures with six signal-analysis modules. Built-in CWRU recordings have known labels; uploaded signals are unlabelled and are not automatically classified.')
-    st.dataframe(df,use_container_width=True,hide_index=True)
+    st.write('Explore vibration signatures with signal-analysis modules. Built-in CWRU recordings have known labels; uploaded signals are unlabelled and are not automatically classified.')
+    st.dataframe(df, use_container_width=True, hide_index=True)
     download(df,'⬇ Export feature summary (CSV)',f'feature_summary_{load.replace(" ","")}.csv')
     st.markdown('**Workflow:** Dataset / Upload → Signal loading → Signal processing → Feature extraction → Visual interpretation → Future validated diagnosis')
 else:

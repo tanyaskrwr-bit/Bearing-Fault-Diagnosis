@@ -273,7 +273,7 @@ if module=='Experimental Fault Pattern Match':
     nearest=ranking.iloc[0]
     st.metric('Closest reference pattern (NOT a diagnosis)',str(nearest['Condition']))
     st.caption(f"Closest example: {nearest['Load']}. Distance {nearest['Relative feature distance']:.3f} (smaller = more similar). No accuracy or confidence percentage is implied.")
-    st.dataframe(ranking[['Load','Condition','Relative feature distance']].round(4),hide_index=True,use_container_width=True,theme="dark")
+    st.dataframe(ranking[['Load','Condition','Relative feature distance']].round(4),hide_index=True,use_container_width=True)
     download(ranking,'⬇ Export reference comparison','experimental_pattern_match.csv')
     st.info('A different machine, sensor, sampling rate, speed or load can invalidate this comparison. Train and independently validate a real model before enabling automated fault labels.')
 
@@ -308,7 +308,7 @@ elif module=='Early Warning Indicators':
     trend=pd.DataFrame({'Time (s)':times,'RMS':rms,'RMS / initial baseline':ratio,'Crest Factor':crest,'Kurtosis':kur})
     st.line_chart(trend.set_index('Time (s)')[['RMS / initial baseline']])
     st.line_chart(trend.set_index('Time (s)')[['Crest Factor','Kurtosis']])
-    st.dataframe(trend.round(5),hide_index=True,use_container_width=True,theme="dark")
+    st.dataframe(trend.round(5),hide_index=True,use_container_width=True)
     download(trend,'⬇ Export trend indicators','vibration_early_warning_indicators.csv')
     st.caption('The initial windows are an arbitrary reference, not a verified healthy baseline. True predictive maintenance needs repeated timestamped measurements and failure histories.')
 
@@ -329,7 +329,7 @@ else:
                 names=df['Condition'].tolist();values=df[metric].to_numpy()
                 ax.bar(names,values,color=[COLORS.get(n,'#2878B5') for n in names]);ax.set_ylabel(metric);style_ax(ax)
                 ax.tick_params(axis='x',labelrotation=12);fig.tight_layout();st.pyplot(fig);plt.close(fig)
-        st.dataframe(df,use_container_width=True,hide_index=True,theme="dark")
+        st.dataframe(df,use_container_width=True,hide_index=True)
         download(df,'⬇ Export features (CSV)',f'features_{load.replace(" ","")}.csv')
     else:
         name=st.selectbox('Bearing condition',[n for n in signals]);x=signals[name]
@@ -348,7 +348,7 @@ else:
             f,amp=fft(x,limit);fig,ax=plt.subplots(figsize=(12,4))
             ax.plot(f,amp,color=color,lw=.8);ax.set(xlabel='Frequency (Hz)',ylabel='Amplitude',title=f'FFT | {name} | {load}')
             style_ax(ax);fig.tight_layout();st.pyplot(fig);plt.close(fig)
-            peaks=peak_frame(f,amp);st.dataframe(peaks,use_container_width=True,hide_index=True,theme="dark")
+            peaks=peak_frame(f,amp);st.dataframe(peaks,use_container_width=True,hide_index=True)
             download(peaks,'⬇ Export FFT peaks (CSV)','fft_peaks.csv')
         elif module=='Time-Frequency Spectrogram':
             st.subheader('Time-Frequency Spectrogram')
@@ -366,7 +366,7 @@ else:
             if not peaks.empty: ax.scatter(peaks['Frequency (Hz)'],peaks['Amplitude'],color='#102b49',s=20,zorder=4)
             ax.set(xlabel='Frequency (Hz)',ylabel='Amplitude',title=f'Dominant peaks | {name} | {load}')
             style_ax(ax);fig.tight_layout();st.pyplot(fig);plt.close(fig)
-            st.dataframe(peaks,use_container_width=True,hide_index=True,theme="dark")
+            st.dataframe(peaks,use_container_width=True,hide_index=True)
             download(peaks,'⬇ Export dominant peaks (CSV)','dominant_peaks.csv')
         elif module=='Envelope Spectrum':
             st.subheader('Envelope Spectrum')

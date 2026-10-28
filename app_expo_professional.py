@@ -83,7 +83,7 @@ def download(df,label,filename):
 
 st.markdown('<div class="hero"><h1>⚙️ Bearing Fault Diagnosis</h1><p>Industrial Machine Health Monitoring • CWRU Vibration Analytics • Engineering Dashboard</p></div>',unsafe_allow_html=True)
 st.sidebar.header('Dashboard Controls')
-modules=['Overview & Summary','Time-Domain Analysis','FFT Spectrum','Time-Frequency Spectrogram','Dominant Peaks','Feature Comparison','Envelope Spectrum','Load Comparison']
+modules=['Overview & Summary','Time-Domain Analysis','FFT Spectrum','Time-Frequency Spectrogram','Dominant Peaks','Feature Comparison','Envelope Spectrum','Experimental Fault Pattern Match','Early Warning Indicators','Load Comparison']
 source=st.sidebar.radio('Data source',['Built-in CWRU dataset','Upload your own data'])
 module=st.sidebar.selectbox('Analysis module',modules)
 is_upload=source=='Upload your own data'
@@ -134,7 +134,7 @@ if is_upload:
     st.info('Exploratory signal analysis only. Uploaded recordings are not automatically classified as Normal or Faulty.')
 else:
     st.sidebar.caption('Built-in CWRU drive-end signals | 12,000 Hz')
-    st.sidebar.info('2 HP / 3 HP show available Normal and Inner Race data. Ball and Outer Race require additional files.')
+    st.sidebar.info('2 HP / 3 HP use available Normal and Inner Race recordings only; missing data is not inferred.')
 
 if module=='Load Comparison':
     frames=[]; problems=[]
@@ -171,7 +171,78 @@ a.metric('Selected load',load);b.metric('Signals loaded',f'{len(signals)} / {1 i
 st.caption('RMS, kurtosis and other features are calculated on each full vibration recording.')
 st.divider()
 
-if module=='Overview & Summary':
+if module=='Experimental Fault Pattern Match':
+    st.subheader('Experimental Fault Pattern Match')
+    st.warning('Research/demo tool only. This is NOT a validated ML classifier and must not be used to diagnose a machine or predict failure.')
+    if is_upload and FS != 12000:
+        st.error('Reference CWRU signals are sampled at 12 kHz. For different sample rates, this demo does not compare patterns; resampling and domain validation are required.')
+        st.stop()
+    if not is_upload and load in ('2 HP','3 HP'):
+        st.info('Reference comparison uses available recordings only. Missing conditions cannot be reliably identified.')
+    references, problems=get_load('0 HP')
+    refs1, problems1=get_load('1 HP')
+    if not references and not refs1:
+        st.error('Reference CWRU recordings are unavailable in the data folder.')
+        st.stop()
+    # Each recording is one example, not an independent training/test population.
+    feat_names=['RMS','Kurtosis','Crest Factor','Peak-to-Peak']
+    rows=[]
+    for ln, data in [('0 HP',references),('1 HP',refs1)]:
+        for condition, sig in data.items():
+            rows.append({'Load':ln,'Condition':condition,**features(sig)})
+    reference_df=pd.DataFrame(rows)
+    target_name=st.selectbox('Signal to compare',list(signals))
+    target=features(signals[target_name])
+    baseline=reference_df[feat_names].to_numpy(dtype=float)
+    center=np.median(baseline,axis=0)
+    scale=np.std(baseline,axis=0)
+    scale=np.where(scale>1e-10,scale,1.)
+    distances=np.sqrt(np.mean(((baseline-np.array([target[k] for k in feat_names]))/scale)**2,axis=1))
+    reference_df['Relative feature distance']=distances
+    ranking=reference_df.sort_values('Relative feature distance').reset_index(drop=True)
+    nearest=ranking.iloc[0]
+    st.metric('Closest reference pattern (NOT a diagnosis)',str(nearest['Condition']))
+    st.caption(f"Closest example: {nearest['Load']}. Distance {nearest['Relative feature distance']:.3f} (smaller = more similar). No accuracy or confidence percentage is implied.")
+    st.dataframe(ranking[['Load','Condition','Relative feature distance']].round(4),hide_index=True,use_container_width=True)
+    download(ranking,'⬇ Export reference comparison','experimental_pattern_match.csv')
+    st.info('A different machine, sensor, sampling rate, speed or load can invalidate this comparison. Train and independently validate a real model before enabling automated fault labels.')
+
+elif module=='Early Warning Indicators':
+    st.subheader('Early Warning Indicators • Within-recording trend')
+    st.warning('Anomaly indicators only — not a prediction of when a fault will occur.')
+    name=st.selectbox('Signal for trend analysis',list(signals))
+    x=signals[name]
+    nwin=min(max(256,int(FS*0.25)),len(x)//4)
+    if nwin<100:
+        st.error('Not enough samples for window analysis.')
+        st.stop()
+    count=min(len(x)//nwin,1000)
+    chunks=x[:count*nwin].reshape(count,nwin)
+    rms=np.sqrt(np.mean(chunks**2,axis=1))
+    crest=np.max(np.abs(chunks),axis=1)/np.maximum(rms,1e-12)
+    kur=kurtosis(chunks,axis=1,fisher=True,bias=True)
+    times=(np.arange(count)+0.5)*nwin/FS
+    baseline_count=max(2,min(count//4,10))
+    base=float(np.median(rms[:baseline_count]))
+    ratio=rms/max(base,1e-12)
+    threshold=st.slider('Illustrative RMS increase threshold (× initial baseline)',1.2,4.0,1.5,0.1)
+    warning_count=int(np.sum(ratio>threshold))
+    a,b,c=st.columns(3)
+    a.metric('Initial RMS baseline',f'{base:.5g}')
+    b.metric('Maximum RMS / baseline',f'{np.max(ratio):.2f}×')
+    c.metric('Windows above threshold',f'{warning_count} / {count}')
+    if warning_count:
+        st.warning('RMS increase detected relative to the start of THIS recording. Verify against a healthy-machine baseline and operating conditions.')
+    else:
+        st.success('No RMS threshold crossings within this recording. This does NOT guarantee healthy operation.')
+    trend=pd.DataFrame({'Time (s)':times,'RMS':rms,'RMS / initial baseline':ratio,'Crest Factor':crest,'Kurtosis':kur})
+    st.line_chart(trend.set_index('Time (s)')[['RMS / initial baseline']])
+    st.line_chart(trend.set_index('Time (s)')[['Crest Factor','Kurtosis']])
+    st.dataframe(trend.round(5),hide_index=True,use_container_width=True)
+    download(trend,'⬇ Export trend indicators','vibration_early_warning_indicators.csv')
+    st.caption('The initial windows are an arbitrary reference, not a verified healthy baseline. True predictive maintenance needs repeated timestamped measurements and failure histories.')
+
+elif module=='Overview & Summary':
     st.subheader('System Overview')
     st.write('Explore vibration signatures with six signal-analysis modules. Built-in CWRU recordings have known labels; uploaded signals are unlabelled and are not automatically classified.')
     st.dataframe(df,use_container_width=True,hide_index=True)
@@ -242,4 +313,4 @@ else:
             except Exception as e: st.error(f'Envelope processing error: {e}')
 
 st.divider()
-st.caption('Built-in CWRU dataset or user-uploaded vibration data • Exploratory signal analysis only; not validated automatic fault classification.')
+st.caption('CWRU / uploaded signals • Research demonstration only • No validated fault classifier or future-failure prediction.')

@@ -217,11 +217,13 @@ if module=='Load Comparison':
     metric=st.selectbox('Feature',['RMS','Kurtosis','Crest Factor','Peak-to-Peak','Std','Variance','Peak','Mean'])
     pivot=df.pivot(index='Condition',columns='Load',values=metric).reindex(NAMES)
     st.bar_chart(pivot)
-   st.markdown(
-    df.to_html(index=False, classes="dark-table", border=0),
-    unsafe_allow_html=True
-)
-    download(df,'⬇ Export both loads (CSV)','bearing_comparison_all_loads.csv')
+
+    st.markdown(
+        df.to_html(index=False, classes="dark-table", border=0),
+        unsafe_allow_html=True
+    )
+
+    download(df, '⬇ Export both loads (CSV)', 'bearing_comparison_all_loads.csv')
     st.caption('Feature values use the full recording for each condition. Differences may reflect operating load as well as fault condition.')
     st.stop()
 

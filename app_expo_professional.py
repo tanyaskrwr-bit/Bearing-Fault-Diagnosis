@@ -26,13 +26,22 @@ st.set_page_config(page_title='Bearing Fault Diagnosis | Engineering Dashboard',
 st.markdown('''<style>
 :root{color-scheme:dark}
 .stApp{background:radial-gradient(ellipse at top right,#102743 0%,#07111f 48%,#050b14 100%);color:#e7f0ff}
-.block-container{padding-top:1.4rem;padding-bottom:2.5rem;max-width:1500px}
+.block-container{padding:1.5rem clamp(1rem,2.2vw,2.5rem) 2.5rem;max-width:none;width:100%}
 [data-testid="stHeader"]{background:rgba(5,11,20,.78)}
 [data-testid="stSidebar"]{background:linear-gradient(180deg,#0b1627,#070e19);border-right:1px solid #1c3551}
 [data-testid="stSidebar"] *{color:#dbeafe}
+/* Keep every form control readable on the dark background */
+div[data-baseweb="select"] > div{background:#0d1b2c !important;border:1px solid #365675 !important;color:#eaf4ff !important}
+div[data-baseweb="select"] span,div[data-baseweb="select"] input{color:#eaf4ff !important;-webkit-text-fill-color:#eaf4ff !important}
+div[data-baseweb="select"] svg{fill:#b8d8f2 !important}
+ul[role="listbox"],div[role="listbox"],li[role="option"]{background:#102238 !important;color:#eaf4ff !important}
+li[role="option"]:hover{background:#164267 !important}
 [data-testid="stMetric"]{background:linear-gradient(145deg,#12243a,#0d1a2b);padding:17px 18px;border:1px solid #24425f;border-radius:15px;box-shadow:0 8px 24px #00000022}
 [data-testid="stMetricLabel"]{color:#9bb4d0}
-[data-testid="stMetricValue"]{color:#eaf6ff}
+[data-testid="stMetricValue"]{color:#eaf6ff;font-size:clamp(1.25rem,2vw,2rem);white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+[data-testid="stMetricValue"] > div{white-space:normal;overflow-wrap:anywhere}
+[data-testid="stMetricLabel"]{font-size:clamp(.85rem,1.1vw,1rem);white-space:normal}
+[data-testid="stSidebar"]{min-width:220px}
 [data-testid="stMetricDelta"]{color:#39d9ff}
 .hero{background:linear-gradient(115deg,#0c1b2d 0%,#123456 58%,#07566a 100%);border:1px solid #2b6b91;color:#fff;padding:25px 28px;border-radius:18px;margin-bottom:20px;box-shadow:0 12px 32px #00000035;position:relative;overflow:hidden}
 .hero:after{content:"";position:absolute;right:-55px;top:-95px;width:240px;height:240px;border:1px solid #53d9ff55;border-radius:50%;box-shadow:0 0 0 24px #53d9ff0b,0 0 0 48px #53d9ff08}
@@ -43,7 +52,19 @@ hr{border-color:#20354d}
 div[data-baseweb="select"]>div,div[data-baseweb="input"]>div,div[data-baseweb="textarea"]>div{background:#0d1b2c;border-color:#29435f;color:#e7f0ff;border-radius:10px}
 .stButton>button,.stDownloadButton>button{background:linear-gradient(100deg,#087ca8,#0b9ac1);color:#fff;border:1px solid #31c5ed;border-radius:10px;font-weight:600;transition:all .15s ease}
 .stButton>button:hover,.stDownloadButton>button:hover{background:#0ca6cf;color:#fff;border-color:#7be7ff;box-shadow:0 0 18px #00bfff30}
-[data-testid="stDataFrame"],[data-testid="stTable"]{border:1px solid #233c56;border-radius:12px;overflow:hidden}
+[data-testid="stDataFrame"],[data-testid="stTable"]{border:1px solid #294966;border-radius:12px;overflow:hidden;background:#0c1929}
+[data-testid="stDataFrame"]{color-scheme:dark !important}
+[data-testid="stDataFrame"] [role="grid"]{background:#0c1929 !important}
+[data-testid="stDataFrame"] canvas{color-scheme:dark}
+[data-testid="stTable"]{background:#0c1929 !important;color:#eaf4ff !important}
+[data-testid="stTable"] table{width:100% !important;border-collapse:collapse !important;background:#0c1929 !important;color:#eaf4ff !important}
+[data-testid="stTable"] th{background:#132940 !important;color:#cfe6ff !important;border:1px solid #294966 !important;padding:10px !important}
+[data-testid="stTable"] td{background:#0c1929 !important;color:#eaf4ff !important;border:1px solid #294966 !important;padding:10px !important}
+[data-testid="stDataFrame"] [data-testid="glideDataEditor"]{color-scheme:dark !important}
+[data-testid="stTable"] table{background:#0c1929 !important;color:#e7f0ff !important}
+[data-testid="stTable"] th{background:#132940 !important;color:#cfe6ff !important}
+[data-testid="stTable"] td{background:#0c1929 !important;color:#e7f0ff !important}
+[data-testid="stAlert"] p{color:inherit}
 [data-testid="stAlert"]{border-radius:12px}
 .stTabs [data-baseweb="tab-list"]{gap:8px}
 .stTabs [data-baseweb="tab"]{background:#0e1d30;border-radius:9px 9px 0 0;padding:9px 15px}
@@ -177,7 +198,7 @@ if module=='Load Comparison':
     metric=st.selectbox('Feature',['RMS','Kurtosis','Crest Factor','Peak-to-Peak','Std','Variance','Peak','Mean'])
     pivot=df.pivot(index='Condition',columns='Load',values=metric).reindex(NAMES)
     st.bar_chart(pivot)
-    st.dataframe(df,use_container_width=True,hide_index=True)
+    st.dataframe(df,use_container_width=True,hide_index=True,theme="dark")
     download(df,'⬇ Export both loads (CSV)','bearing_comparison_all_loads.csv')
     st.caption('Feature values use the full recording for each condition. Differences may reflect operating load as well as fault condition.')
     st.stop()
@@ -228,7 +249,7 @@ if module=='Experimental Fault Pattern Match':
     nearest=ranking.iloc[0]
     st.metric('Closest reference pattern (NOT a diagnosis)',str(nearest['Condition']))
     st.caption(f"Closest example: {nearest['Load']}. Distance {nearest['Relative feature distance']:.3f} (smaller = more similar). No accuracy or confidence percentage is implied.")
-    st.dataframe(ranking[['Load','Condition','Relative feature distance']].round(4),hide_index=True,use_container_width=True)
+    st.dataframe(ranking[['Load','Condition','Relative feature distance']].round(4),hide_index=True,use_container_width=True,theme="dark")
     download(ranking,'⬇ Export reference comparison','experimental_pattern_match.csv')
     st.info('A different machine, sensor, sampling rate, speed or load can invalidate this comparison. Train and independently validate a real model before enabling automated fault labels.')
 
@@ -263,14 +284,14 @@ elif module=='Early Warning Indicators':
     trend=pd.DataFrame({'Time (s)':times,'RMS':rms,'RMS / initial baseline':ratio,'Crest Factor':crest,'Kurtosis':kur})
     st.line_chart(trend.set_index('Time (s)')[['RMS / initial baseline']])
     st.line_chart(trend.set_index('Time (s)')[['Crest Factor','Kurtosis']])
-    st.dataframe(trend.round(5),hide_index=True,use_container_width=True)
+    st.dataframe(trend.round(5),hide_index=True,use_container_width=True,theme="dark")
     download(trend,'⬇ Export trend indicators','vibration_early_warning_indicators.csv')
     st.caption('The initial windows are an arbitrary reference, not a verified healthy baseline. True predictive maintenance needs repeated timestamped measurements and failure histories.')
 
 elif module=='Overview & Summary':
     st.subheader('System Overview')
     st.write('Explore vibration signatures with six signal-analysis modules. Built-in CWRU recordings have known labels; uploaded signals are unlabelled and are not automatically classified.')
-    st.dataframe(df,use_container_width=True,hide_index=True)
+    st.dataframe(df, use_container_width=True, hide_index=True)
     download(df,'⬇ Export feature summary (CSV)',f'feature_summary_{load.replace(" ","")}.csv')
     st.markdown('**Workflow:** Dataset / Upload → Signal loading → Signal processing → Feature extraction → Visual interpretation → Future validated diagnosis')
 else:
@@ -284,7 +305,7 @@ else:
                 names=df['Condition'].tolist();values=df[metric].to_numpy()
                 ax.bar(names,values,color=[COLORS.get(n,'#2878B5') for n in names]);ax.set_ylabel(metric);style_ax(ax)
                 ax.tick_params(axis='x',labelrotation=12);fig.tight_layout();st.pyplot(fig);plt.close(fig)
-        st.dataframe(df,use_container_width=True,hide_index=True)
+        st.dataframe(df,use_container_width=True,hide_index=True,theme="dark")
         download(df,'⬇ Export features (CSV)',f'features_{load.replace(" ","")}.csv')
     else:
         name=st.selectbox('Bearing condition',[n for n in signals]);x=signals[name]
@@ -303,7 +324,7 @@ else:
             f,amp=fft(x,limit);fig,ax=plt.subplots(figsize=(12,4))
             ax.plot(f,amp,color=color,lw=.8);ax.set(xlabel='Frequency (Hz)',ylabel='Amplitude',title=f'FFT | {name} | {load}')
             style_ax(ax);fig.tight_layout();st.pyplot(fig);plt.close(fig)
-            peaks=peak_frame(f,amp);st.dataframe(peaks,use_container_width=True,hide_index=True)
+            peaks=peak_frame(f,amp);st.dataframe(peaks,use_container_width=True,hide_index=True,theme="dark")
             download(peaks,'⬇ Export FFT peaks (CSV)','fft_peaks.csv')
         elif module=='Time-Frequency Spectrogram':
             st.subheader('Time-Frequency Spectrogram')
@@ -321,7 +342,7 @@ else:
             if not peaks.empty: ax.scatter(peaks['Frequency (Hz)'],peaks['Amplitude'],color='#102b49',s=20,zorder=4)
             ax.set(xlabel='Frequency (Hz)',ylabel='Amplitude',title=f'Dominant peaks | {name} | {load}')
             style_ax(ax);fig.tight_layout();st.pyplot(fig);plt.close(fig)
-            st.dataframe(peaks,use_container_width=True,hide_index=True)
+            st.dataframe(peaks,use_container_width=True,hide_index=True,theme="dark")
             download(peaks,'⬇ Export dominant peaks (CSV)','dominant_peaks.csv')
         elif module=='Envelope Spectrum':
             st.subheader('Envelope Spectrum')
@@ -332,7 +353,7 @@ else:
                 ax.set(xlabel='Envelope frequency (Hz)',ylabel='Envelope amplitude',title=f'Envelope spectrum | {name} | {load}')
                 style_ax(ax);fig.tight_layout();st.pyplot(fig);plt.close(fig)
                 peaks=peak_frame(f,amp,10)
-                st.dataframe(peaks,use_container_width=True,hide_index=True)
+                st.dataframe(peaks,use_container_width=True,hide_index=True,theme="dark")
                 download(peaks,'⬇ Export envelope peaks (CSV)','envelope_peaks.csv')
                 st.info('Envelope spectral peaks are diagnostic indicators, not automatic proof of a specific fault.')
             except Exception as e: st.error(f'Envelope processing error: {e}')

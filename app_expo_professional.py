@@ -24,11 +24,30 @@ FILES = {
 }
 st.set_page_config(page_title='Bearing Fault Diagnosis | Engineering Dashboard',page_icon='⚙️',layout='wide')
 st.markdown('''<style>
-.stApp{background:#f4f7fb}.block-container{padding-top:1.5rem;max-width:1450px}
-[data-testid="stSidebar"]{background:#eaf0f7}
-[data-testid="stMetric"]{background:white;padding:15px;border:1px solid #dce5ef;border-radius:13px;box-shadow:0 3px 10px #1e3a5f0b}
-.hero{background:linear-gradient(115deg,#102b49,#246078);color:white;padding:24px 28px;border-radius:16px;margin-bottom:20px}
-.hero h1{color:white;margin:0;font-size:2rem}.hero p{color:#d9eaf4;margin:5px 0 0}
+:root{color-scheme:dark}
+.stApp{background:radial-gradient(ellipse at top right,#102743 0%,#07111f 48%,#050b14 100%);color:#e7f0ff}
+.block-container{padding-top:1.4rem;padding-bottom:2.5rem;max-width:1500px}
+[data-testid="stHeader"]{background:rgba(5,11,20,.78)}
+[data-testid="stSidebar"]{background:linear-gradient(180deg,#0b1627,#070e19);border-right:1px solid #1c3551}
+[data-testid="stSidebar"] *{color:#dbeafe}
+[data-testid="stMetric"]{background:linear-gradient(145deg,#12243a,#0d1a2b);padding:17px 18px;border:1px solid #24425f;border-radius:15px;box-shadow:0 8px 24px #00000022}
+[data-testid="stMetricLabel"]{color:#9bb4d0}
+[data-testid="stMetricValue"]{color:#eaf6ff}
+[data-testid="stMetricDelta"]{color:#39d9ff}
+.hero{background:linear-gradient(115deg,#0c1b2d 0%,#123456 58%,#07566a 100%);border:1px solid #2b6b91;color:#fff;padding:25px 28px;border-radius:18px;margin-bottom:20px;box-shadow:0 12px 32px #00000035;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-55px;top:-95px;width:240px;height:240px;border:1px solid #53d9ff55;border-radius:50%;box-shadow:0 0 0 24px #53d9ff0b,0 0 0 48px #53d9ff08}
+.hero h1{color:#fff;margin:0;font-size:2rem;letter-spacing:-.03em}.hero p{color:#b8d8f2;margin:7px 0 0;font-size:.98rem}
+h1,h2,h3{letter-spacing:-.025em;color:#eaf4ff}
+.stMarkdown,.stText,.stCaption{color:#c5d5e8}
+hr{border-color:#20354d}
+div[data-baseweb="select"]>div,div[data-baseweb="input"]>div,div[data-baseweb="textarea"]>div{background:#0d1b2c;border-color:#29435f;color:#e7f0ff;border-radius:10px}
+.stButton>button,.stDownloadButton>button{background:linear-gradient(100deg,#087ca8,#0b9ac1);color:#fff;border:1px solid #31c5ed;border-radius:10px;font-weight:600;transition:all .15s ease}
+.stButton>button:hover,.stDownloadButton>button:hover{background:#0ca6cf;color:#fff;border-color:#7be7ff;box-shadow:0 0 18px #00bfff30}
+[data-testid="stDataFrame"],[data-testid="stTable"]{border:1px solid #233c56;border-radius:12px;overflow:hidden}
+[data-testid="stAlert"]{border-radius:12px}
+.stTabs [data-baseweb="tab-list"]{gap:8px}
+.stTabs [data-baseweb="tab"]{background:#0e1d30;border-radius:9px 9px 0 0;padding:9px 15px}
+.stTabs [aria-selected="true"]{border-bottom:2px solid #25c7f4;color:#61ddff}
 </style>''',unsafe_allow_html=True)
 
 @st.cache_data(show_spinner=False)
@@ -76,12 +95,18 @@ def envelope(x,limit):
     return fft(env,limit)
 
 def style_ax(ax):
-    ax.grid(alpha=.2);ax.spines[['top','right']].set_visible(False)
+    ax.set_facecolor('#0c1929')
+    ax.figure.set_facecolor('#0c1929')
+    ax.grid(alpha=.18,color='#7f9db9',linestyle='--')
+    ax.tick_params(colors='#b9cde2')
+    ax.xaxis.label.set_color('#c9d9eb'); ax.yaxis.label.set_color('#c9d9eb')
+    ax.title.set_color('#eaf4ff')
+    for spine in ax.spines.values(): spine.set_color('#29445e')
 
 def download(df,label,filename):
     st.download_button(label,df.to_csv(index=False).encode('utf-8'),file_name=filename,mime='text/csv')
 
-st.markdown('<div class="hero"><h1>⚙️ Bearing Fault Diagnosis</h1><p>Industrial Machine Health Monitoring • CWRU Vibration Analytics • Engineering Dashboard</p></div>',unsafe_allow_html=True)
+st.markdown('<div class="hero"><h1>⚙️ Bearing Fault Diagnosis</h1><p>INDUSTRIAL MACHINE HEALTH • CWRU VIBRATION ANALYTICS • ENGINEERING CONSOLE</p></div>',unsafe_allow_html=True)
 st.sidebar.header('Dashboard Controls')
 modules=['Overview & Summary','Time-Domain Analysis','FFT Spectrum','Time-Frequency Spectrogram','Dominant Peaks','Feature Comparison','Envelope Spectrum','Experimental Fault Pattern Match','Early Warning Indicators','Load Comparison']
 source=st.sidebar.radio('Data source',['Built-in CWRU dataset','Upload your own data'])

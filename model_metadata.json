@@ -1,0 +1,214 @@
+{
+  "training_source": "CWRU 12 kHz Drive-End Accelerometer Benchmark",
+  "sample_rate_hz": 12000,
+  "window_size": 2048,
+  "total_training_samples": 949,
+  "features": [
+    "rms",
+    "mean",
+    "std",
+    "var",
+    "skewness",
+    "kurtosis",
+    "peak",
+    "ptp",
+    "crest_factor",
+    "shape_factor",
+    "impulse_factor",
+    "margin_factor",
+    "dominant_freq",
+    "spectral_centroid",
+    "spectral_spread",
+    "spectral_skewness",
+    "spectral_kurtosis",
+    "spectral_energy",
+    "band_0_100_ratio",
+    "band_100_500_ratio",
+    "band_500_2000_ratio",
+    "band_2000_5000_ratio",
+    "env_rms",
+    "env_peak",
+    "env_crest",
+    "env_kurtosis",
+    "env_dominant_freq",
+    "env_spectral_energy",
+    "env_bpfo_band_energy",
+    "env_bpfi_band_energy",
+    "env_bsf_band_energy"
+  ],
+  "fault_classes": [
+    "Ball Fault",
+    "Inner Race Fault",
+    "Normal",
+    "Outer Race Fault"
+  ],
+  "load_classes": [
+    "0 HP",
+    "1 HP",
+    "2 HP",
+    "3 HP"
+  ],
+  "evaluation": {
+    "fault_classification": {
+      "5_fold_cv_accuracy": 1.0,
+      "leave_one_load_out_accuracy": 1.0,
+      "report": {
+        "Ball Fault": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 236.0
+        },
+        "Inner Race Fault": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 237.0
+        },
+        "Normal": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 240.0
+        },
+        "Outer Race Fault": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 236.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 949.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 949.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          236,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          237,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          240,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          236
+        ]
+      ],
+      "top_features": {
+        "spectral_kurtosis": 0.0762,
+        "var": 0.0679,
+        "env_spectral_energy": 0.0662,
+        "band_500_2000_ratio": 0.0661,
+        "env_peak": 0.0604,
+        "rms": 0.0538,
+        "peak": 0.05,
+        "env_bpfi_band_energy": 0.0499
+      }
+    },
+    "load_classification": {
+      "5_fold_cv_accuracy": 0.9779,
+      "report": {
+        "0 HP": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 237.0
+        },
+        "1 HP": {
+          "precision": 0.9830508474576272,
+          "recall": 0.9789029535864979,
+          "f1-score": 0.9809725158562368,
+          "support": 237.0
+        },
+        "2 HP": {
+          "precision": 0.9576271186440678,
+          "recall": 0.9535864978902954,
+          "f1-score": 0.9556025369978859,
+          "support": 237.0
+        },
+        "3 HP": {
+          "precision": 0.9708333333333333,
+          "recall": 0.9789915966386554,
+          "f1-score": 0.9748953974895398,
+          "support": 238.0
+        },
+        "accuracy": 0.9778714436248683,
+        "macro avg": {
+          "precision": 0.9778778248587571,
+          "recall": 0.9778702620288622,
+          "f1-score": 0.9778676125859156,
+          "support": 949.0
+        },
+        "weighted avg": {
+          "precision": 0.977870401790764,
+          "recall": 0.9778714436248683,
+          "f1-score": 0.9778644806416623,
+          "support": 949.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          237,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          232,
+          5,
+          0
+        ],
+        [
+          0,
+          4,
+          226,
+          7
+        ],
+        [
+          0,
+          0,
+          5,
+          233
+        ]
+      ],
+      "top_features": {
+        "mean": 0.1235,
+        "dominant_freq": 0.0763,
+        "band_2000_5000_ratio": 0.0697,
+        "spectral_skewness": 0.0583,
+        "band_500_2000_ratio": 0.055,
+        "env_rms": 0.0543,
+        "rms": 0.0521,
+        "var": 0.0457
+      }
+    }
+  },
+  "multi_fault_status": {
+    "supported": false,
+    "reason": "CWRU Drive-End benchmark contains single-defect bearings only. No simultaneous multi-defect ground truth recordings exist in authentic dataset."
+  }
+}
